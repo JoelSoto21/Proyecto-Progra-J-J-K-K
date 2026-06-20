@@ -2,6 +2,7 @@ library(shiny)
 library(readr)
 library(dplyr)
 library(ggplot2)
+library(scales)
 options(scipen = 999)
 
 #    https://shiny.posit.co/
@@ -29,6 +30,11 @@ promediainador <- df %>% #lo convierto en promediainador para crear un objeto nu
 Ramgo=c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24) #Se tenia que hacer una forma de que R entendiera que 1 a 24 son variables distintas, y al crear promediainador se me fue el detalle de que le puse enero=1, tanto 2023 como 2024, entonces solo agregue otra columna con 24 id´s diferentes, para que usara esa colunmna como x
 promediainador$Rango<-Ramgo
 #Finalización de modificaciones para el gráfico 1
+
+
+#Modificaciones para la pregunta 3
+datos_pregunta3 <- Dataset_cafe
+#Finalización de modificaciones para la pregunta 3
 
 
 
@@ -114,6 +120,36 @@ server <- function(input, output) {
         filter(Total_Cantidad == min(Total_Cantidad))
     }
   })
+  
+  resumen_ciudades_p3 <- reactive({
+    
+    req(input$producto_p3)
+    
+    if (input$producto_p3 == "Todos") {
+      
+      datos_pregunta3 %>%
+        group_by(City) %>%
+        summarise(
+          Ingreso_total = sum(`Final Sales`, na.rm = TRUE),
+          Promedio_ventas = mean(`Final Sales`, na.rm = TRUE),
+          .groups = "drop"
+        ) %>%
+        arrange(desc(Ingreso_total))
+      
+    } else {
+      
+      datos_pregunta3 %>%
+        filter(Product == input$producto_p3) %>%
+        group_by(City) %>%
+        summarise(
+          Ingreso_total = sum(`Final Sales`, na.rm = TRUE),
+          Promedio_ventas = mean(`Final Sales`, na.rm = TRUE),
+          .groups = "drop"
+        ) %>%
+        arrange(desc(Ingreso_total))
+    }
+  })
+  
   pantalla <- reactiveVal("ninguna")
   #Tuvimos que añadir un donde o un algo para que entienda que es cada pantalla, 
   observeEvent(input$pregunta1, {
@@ -161,6 +197,62 @@ server <- function(input, output) {
       )
     }
     else if(pantalla()=="p3"){ #aquí añaden la tag list, guíense de la pregunta 1 y 2
+      
+      tagList(
+        h2("Pregunta 3"),
+        h4("¿Cuáles ciudades generan los mayores ingresos por ventas de café?"),
+        
+        radioButtons(
+          inputId = "producto_p3",
+          label = "Seleccione el tipo de café:",
+          choices = c(
+            "Todos los productos" = "Todos",
+            sort(unique(datos_pregunta3$Product))
+          ),
+          selected = "Todos"
+        ),
+        
+        h3("Ingresos acumulados por ciudad"),
+        plotOutput("grafico_ciudades", height = "450px"),
+        
+        hr(),
+        
+        fluidRow(
+          column(
+            4,
+            wellPanel(
+              h4("Promedio de ventas"),
+              textOutput("promedio_ventas")
+            )
+          ),
+          
+          column(
+            4,
+            wellPanel(
+              h4("Mediana general"),
+              textOutput("mediana_ventas")
+            )
+          ),
+          
+          column(
+            4,
+            wellPanel(
+              h4("Ciudad con mayor ingreso"),
+              textOutput("mejor_ciudad")
+            )
+          )
+        ),
+        
+        hr(),
+        
+        h3("Resumen de ingresos por ciudad"),
+        tableOutput("tabla_ciudades"),
+        
+        hr(),
+        
+        h3("Interpretación"),
+        textOutput("texto_explicativo")
+      )
       
     }
     else if(pantalla()=="p4"){#aquí añaden la tag list, guíense de la pregunta 1 y 2
@@ -237,6 +329,122 @@ server <- function(input, output) {
   })
   #Finalización pregunta 1
   #Añada a partir de aquí
+  
+  output$grafico_ciudades <- renderPlot({
+    
+    resumen <- resumen_ciudades_p3()
+    
+    ggplot(
+      resumen,
+      aes(
+        x = reorder(City, -Ingreso_total),
+        y = Ingreso_total,
+        fill = City
+      )
+    ) +
+      geom_col(show.legend = FALSE) +
+      scale_y_continuous(labels = dollar_format(prefix = "$")) +
+      labs(
+        title = "Ingresos acumulados por ciudad",
+        subtitle = "Según el producto de café seleccionado",
+        x = "Ciudad",
+        y = "Ingresos totales por ventas finales"
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1)
+      )
+  })
+  
+  output$promedio_ventas <- renderText({
+    
+    promedio <- mean(
+      if (input$producto_p3 == "Todos") {
+        datos_pregunta3$`Final Sales`
+      } else {
+        datos_pregunta3 %>%
+          filter(Product == input$producto_p3) %>%
+          pull(`Final Sales`)
+      },
+      na.rm = TRUE
+    )
+    
+    dollar(promedio)
+  })
+  
+  output$mediana_ventas <- renderText({
+    
+    mediana <- median(
+      if (input$producto_p3 == "Todos") {
+        datos_pregunta3$`Final Sales`
+      } else {
+        datos_pregunta3 %>%
+          filter(Product == input$producto_p3) %>%
+          pull(`Final Sales`)
+      },
+      na.rm = TRUE
+    )
+    
+    dollar(mediana)
+  })
+  
+  output$mejor_ciudad <- renderText({
+    
+    resumen <- resumen_ciudades_p3()
+    
+    req(nrow(resumen) > 0)
+    
+    paste0(
+      resumen$City[1],
+      " (",
+      dollar(resumen$Ingreso_total[1]),
+      ")"
+    )
+  })
+  
+  output$tabla_ciudades <- renderTable({
+    
+    resumen_ciudades_p3() %>%
+      mutate(
+        Ingreso_total = dollar(Ingreso_total),
+        Promedio_ventas = dollar(Promedio_ventas)
+      ) %>%
+      rename(
+        Ciudad = City,
+        `Ingreso total` = Ingreso_total,
+        `Promedio por venta` = Promedio_ventas
+      )
+  })
+  
+  output$texto_explicativo <- renderText({
+    
+    resumen <- resumen_ciudades_p3()
+    
+    req(nrow(resumen) > 0)
+    
+    ciudad1 <- resumen$City[1]
+    ingreso1 <- resumen$Ingreso_total[1]
+    
+    if (nrow(resumen) >= 2) {
+      
+      ciudad2 <- resumen$City[2]
+      ingreso2 <- resumen$Ingreso_total[2]
+      
+      paste0(
+        "Para el producto seleccionado, la ciudad con mayor ingreso acumulado es ",
+        ciudad1, ", con un total de ", dollar(ingreso1),
+        ". Le sigue ", ciudad2, ", con ", dollar(ingreso2),
+        ". El gráfico permite comparar fácilmente el ingreso total generado en cada ciudad."
+      )
+      
+    } else {
+      
+      paste0(
+        "Para el producto seleccionado, la ciudad con mayor ingreso acumulado es ",
+        ciudad1, ", con un total de ", dollar(ingreso1), "."
+      )
+    }
+  })
 } #Finaliza el código, no escriba nada fuera de este parentesis y siemore llevelo con espacios
 
 shinyApp(ui = ui, server = server)

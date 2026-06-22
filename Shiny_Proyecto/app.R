@@ -37,6 +37,13 @@ datos_pregunta3 <- Dataset_cafe
 #Finalización de modificaciones para la pregunta 3
 
 
+#Modificaciones para la pregunta 4 (Añadido por vos)
+datos_pregunta4 <- Dataset_cafe
+# Aseguramos formato lógico para evitar conflictos con el checkbox interactivo
+datos_pregunta4$Used_Discount <- as.logical(datos_pregunta4$Used_Discount)
+#Finalización de modificaciones para la pregunta 4
+
+
 
 
 #No tocar nada de esta parte
@@ -255,8 +262,40 @@ server <- function(input, output) {
       )
       
     }
-    else if(pantalla()=="p4"){#aquí añaden la tag list, guíense de la pregunta 1 y 2
-      
+    else if(pantalla()=="p4"){
+      tagList(
+        h2("Pregunta 4"),
+        h4("¿Cómo se comportan las cantidades finales dependiendo de si se usa descuento o no?"),
+        br(),
+        
+        
+        checkboxGroupInput(
+          inputId = "filtro_descuento_p4",
+          label = "Seleccione el estado del descuento:",
+          choices = c("Con Descuento" = TRUE, "Sin Descuento" = FALSE),
+          selected = c(TRUE, FALSE)
+        ),
+        
+        br(),
+        
+        
+        plotOutput("grafico_dispersion_p4"),
+        br(),
+        hr(),
+        
+        
+        h5("Grafico de dispersión"),
+        p("Este gráfico de dispersión permite evaluar la relación entre la cantidad de unidades vendidas y ",
+          "las ventas finales obtenidas. Al activar y desactivar los filtros de la consola, se puede apreciar ",
+          "visualmente si la aplicación de descuentos desplaza la tendencia de los puntos o altera los patrones de compra."),
+        
+        h5("Variables"),
+        tags$ul(
+          tags$li("Muestra analizada a partir del archivo 'DatasetForCoffeeSales2.csv'."),
+          tags$li("Variable 'Used_Discount' clasificada de manera binaria (TRUE para transacciones con rebaja, FALSE para precio regular)."),
+          tags$li("Las cantidades finales corresponden al cruce directo entre 'Quantity' y 'Final Sales'.")
+        )
+      )
     }
     else if(pantalla()=="p5"){#aquí añaden la tag list, guíense de la pregunta 1 y 2
       
@@ -445,9 +484,51 @@ server <- function(input, output) {
       )
     }
   })
+  # pregunta 4
+  # Expresión reactiva para filtrar la base aislada según el checkbox de la P4
+  datos_filtrados_p4 <- reactive({
+    req(input$filtro_descuento_p4) 
+    datos_pregunta4 %>% 
+      filter(Used_Discount %in% input$filtro_descuento_p4)
+  })
+  
+  # 4.1 Renderizar Indicador: Total Ventas P4
+  output$total_sales_ind_p4 <- renderText({
+    total <- sum(datos_filtrados_p4()$`Final Sales`, na.rm = TRUE)
+    paste0("$", format(round(total, 2), big.mark = ","))
+  })
+  
+  # 4.2 Renderizar Indicador: Total Cantidades P4
+  output$total_quantity_ind_p4 <- renderText({
+    total_qty <- sum(datos_filtrados_p4()$Quantity, na.rm = TRUE)
+    paste0(format(total_qty, big.mark = ","), " unidades")
+  })
+  
+  # 4.3 Renderizar Gráfico de Dispersión Interactivo P4
+  output$grafico_dispersion_p4 <- renderPlot({
+    ggplot(datos_filtrados_p4(), aes(x = Quantity, y = `Final Sales`, color = Used_Discount)) +
+      geom_point(size = 3.5, alpha = 0.7, position = position_jitter(width = 0.15, height = 0)) +
+      scale_color_manual(
+        values = c("TRUE" = "#e74c3c", "FALSE" = "#3498db"),
+        labels = c("TRUE" = "Con Descuento", "FALSE" = "Sin Descuento")
+      ) +
+      labs(
+        title = "¿Cómo se comportan las cantidades finales dependiendo de si se usa descuento o no?",
+        subtitle = "Análisis de Dispersión: Unidades vs Ventas Finales",
+        x = "Cantidad de Unidades (Quantity)",
+        y = "Monto de Ventas Finales (Final Sales)",
+        color = "Filtro de Descuento"
+      ) +
+      theme_minimal(base_size = 13) +
+      theme(
+        plot.title = element_text(face = "bold", size = 14),
+        legend.position = "bottom"
+      )
+  })
+  #fin pregunta 4
+  # 
+  
+  
 } #Finaliza el código, no escriba nada fuera de este parentesis y siemore llevelo con espacios
 
 shinyApp(ui = ui, server = server)
-
-
-

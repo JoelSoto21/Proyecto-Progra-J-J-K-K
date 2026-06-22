@@ -9,7 +9,7 @@ options(scipen = 999)
 # nunca cambiar el nombre o se jode
 #
 #si debe de añadir o modificar el dataset original, cree una variable que use sus gráficos, si no, pueden haber muchos conlfictos en los gráficos, de ser posible, señale cuales son sus variables/datos/objetos  para evitar errores entre gráficos
-Dataset_cafe <- read_csv("DatasetForCoffeeSales2.csv") #solo cambie la ruta del archivo, no toque variables, si requiere añadir un dato, conversión, lo que sea de trabajo como objeto extra, hagalo afuera de todo el bloque de shiny
+Dataset_cafe <- DatasetForCoffeeSales2 #solo cambie la ruta del archivo, no toque variables, si requiere añadir un dato, conversión, lo que sea de trabajo como objeto extra, hagalo afuera de todo el bloque de shiny
 
 #Modificaciones para la pregunta 1
 jorgito<-Dataset_cafe #Cambio para no tocar el dataset original
@@ -44,6 +44,9 @@ datos_pregunta4$Used_Discount <- as.logical(datos_pregunta4$Used_Discount)
 #Finalización de modificaciones para la pregunta 4
 
 
+#Modificaciones para la pregunta 5 (Añadido e integrado)
+datos_pregunta5 <- Dataset_cafe
+#Finalización de modificaciones para la pregunta 5
 
 
 #No tocar nada de esta parte
@@ -179,6 +182,21 @@ server <- function(input, output) {
   observeEvent(input$ver_todos, {
     vista("todos")
   })
+  
+  # Filtro reactivo basado en el slider para la Pregunta 5
+  datos_filtrados_p5 <- reactive({
+    req(input$rango_precio)
+    datos_pregunta5 %>%
+      filter(`Unit Price` >= input$rango_precio[1] & `Unit Price` <= input$rango_precio[2])
+  })
+  
+  # Expresión reactiva para filtrar la base aislada según el checkbox de la P4
+  datos_filtrados_p4 <- reactive({
+    req(input$filtro_descuento_p4) 
+    datos_pregunta4 %>% 
+      filter(Used_Discount %in% input$filtro_descuento_p4)
+  })
+  
   #Desde aquí en adelante puede manipular, pero hagalo con cuidado y siempre con respaldo
   output$contenido_pregunta <- renderUI({
     
@@ -297,8 +315,21 @@ server <- function(input, output) {
         )
       )
     }
-    else if(pantalla()=="p5"){#aquí añaden la tag list, guíense de la pregunta 1 y 2
-      
+    else if(pantalla()=="p5"){ #aquí añaden la tag list, guíense de la pregunta 1 y 2
+      tagList(
+        h2("Pregunta 5"),
+        h4("Análisis de Precio vs Cantidad"),
+        sliderInput("rango_precio", 
+                    "Seleccionar rango de Precio Unitario:", 
+                    min = min(datos_pregunta5$`Unit Price`, na.rm = TRUE), 
+                    max = max(datos_pregunta5$`Unit Price`, na.rm = TRUE), 
+                    value = c(min(datos_pregunta5$`Unit Price`, na.rm = TRUE), max(datos_pregunta5$`Unit Price`, na.rm = TRUE))),
+        br(),
+        plotOutput("grafico_p5"),
+        br(),
+        h3("Resumen de Precio vs Cantidad Vendida"),
+        tableOutput("tabla_resumen_p5")
+      )
     }
   })
   
@@ -484,26 +515,8 @@ server <- function(input, output) {
       )
     }
   })
+  
   # pregunta 4
-  # Expresión reactiva para filtrar la base aislada según el checkbox de la P4
-  datos_filtrados_p4 <- reactive({
-    req(input$filtro_descuento_p4) 
-    datos_pregunta4 %>% 
-      filter(Used_Discount %in% input$filtro_descuento_p4)
-  })
-  
-  # 4.1 Renderizar Indicador: Total Ventas P4
-  output$total_sales_ind_p4 <- renderText({
-    total <- sum(datos_filtrados_p4()$`Final Sales`, na.rm = TRUE)
-    paste0("$", format(round(total, 2), big.mark = ","))
-  })
-  
-  # 4.2 Renderizar Indicador: Total Cantidades P4
-  output$total_quantity_ind_p4 <- renderText({
-    total_qty <- sum(datos_filtrados_p4()$Quantity, na.rm = TRUE)
-    paste0(format(total_qty, big.mark = ","), " unidades")
-  })
-  
   # 4.3 Renderizar Gráfico de Dispersión Interactivo P4
   output$grafico_dispersion_p4 <- renderPlot({
     ggplot(datos_filtrados_p4(), aes(x = Quantity, y = `Final Sales`, color = Used_Discount)) +
@@ -528,6 +541,32 @@ server <- function(input, output) {
   #fin pregunta 4
   # 
   
+  # Outputs pregunta 5
+  output$grafico_p5 <- renderPlot({
+    df_p5 <- datos_filtrados_p5() %>%
+      group_by(`Unit Price`) %>%
+      summarise(Total_Cantidad = sum(Quantity, na.rm = TRUE), .groups = "drop")
+    
+    ggplot(df_p5, aes(x = factor(`Unit Price`), y = Total_Cantidad, fill = factor(`Unit Price`))) +
+      geom_col(color = "black") +
+      scale_fill_brewer(palette = "YlOrBr") +
+      labs(title = "Relación Precio Unitario vs Cantidad Total Vendida",
+           x = "Precio Unitario ($)", 
+           y = "Cantidad Total Vendida",
+           fill = "Precio ($)") +
+      theme_minimal(base_size = 14)
+  })
+  
+  output$tabla_resumen_p5 <- renderTable({
+    datos_filtrados_p5() %>%
+      group_by(`Unit Price`) %>%
+      summarise(
+        `Cantidad Comprada` = sum(Quantity, na.rm = TRUE),
+        `Número de Transacciones` = n(),
+        `Venta Final Promedio` = mean(`Final Sales`, na.rm = TRUE),
+        .groups = "drop"
+      )
+  })
   
 } #Finaliza el código, no escriba nada fuera de este parentesis y siemore llevelo con espacios
 

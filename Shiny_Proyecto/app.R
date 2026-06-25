@@ -72,17 +72,15 @@ ui <- fluidPage(
       br(), br(),
       
       actionButton("pregunta5", "Pregunta 5", width = "100%"),
-      br(), br(),
       
-      h4("Filtros del gráfico"),
+      br(),
+      hr(),
       
-      actionButton("ver_todos", "Ingresos totales", width = "100%"),
-      br(), br(),
+      h4("Instrucciones"),
       
-      actionButton("mayores_ventas", "Mayores ventas", width = "100%"),
-      br(), br(),
+      p("Seleccione una pregunta para visualizar su respectivo análisis, gráfico y resumen de resultados."),
       
-      actionButton("menores_ventas", "Menores ventas", width = "100%")
+      p("Cada sección incluye filtros interactivos que permiten explorar la información de ventas de café de Árabia Saudita.")
     ),
     
     mainPanel(
@@ -169,12 +167,15 @@ server <- function(input, output) {
   observeEvent(input$pregunta2, {
     pantalla("p2")
   })
+  
   observeEvent(input$pregunta3, {
     pantalla("p3")
   })
+  
   observeEvent(input$pregunta4, {
     pantalla("p4")
   })
+  
   observeEvent(input$pregunta5, {
     pantalla("p5")
   })
@@ -214,18 +215,39 @@ server <- function(input, output) {
       tagList(
         h2("Pregunta 2"),
         h4("¿Qué tipos de café generan mayores ingresos y cantidades de venta?"),
-        br(),
+        
+        h4("Filtros del gráfico"),
+        
+        fluidRow(
+          column(
+            4,
+            actionButton("ver_todos", "Ingresos totales", width = "100%")
+          ),
+          
+          column(
+            4,
+            actionButton("mayores_ventas", "Mayores ventas", width = "100%")
+          ),
+          
+          column(
+            4,
+            actionButton("menores_ventas", "Menores ventas", width = "100%")
+          )
+        ),
+        
+        br(), br(),
+        
         plotOutput("grafico_ingresos"),
         br(),
         h3("Resumen mostrado"),
         tableOutput("tabla_resumen")
       )
-    }
-    else if(pantalla()=="p3"){ #aquí añaden la tag list, guíense de la pregunta 1 y 2
+      
+    } else if(pantalla()=="p3"){ #aquí añaden la tag list, guíense de la pregunta 1 y 2
       
       tagList(
         h2("Pregunta 3"),
-        h4("¿Cuáles ciudades generan los mayores ingresos por ventas de café?"),
+        h4("¿Cuáles ciudades Árabes generan los mayores ingresos por ventas de café durante el tiempo registrado?"),
         
         radioButtons(
           inputId = "producto_p3",

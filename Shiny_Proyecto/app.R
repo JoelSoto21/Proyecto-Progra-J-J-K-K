@@ -1,3 +1,24 @@
+#
+# This is a Shiny web application. You can run the application by clicking
+# the 'Run App' button above.
+#
+# Find out more about building applications with Shiny here:
+#
+#    https://shiny.posit.co/
+# nunca cambiar el nombre o se jode
+#
+#
+#
+#
+#
+#
+#
+#
+#
+
+
+
+
 library(shiny)
 library(readr)
 library(dplyr)
@@ -9,12 +30,21 @@ options(scipen = 999)
 # nunca cambiar el nombre o se jode
 #
 #si debe de añadir o modificar el dataset original, cree una variable que use sus gráficos, si no, pueden haber muchos conlfictos en los gráficos, de ser posible, señale cuales son sus variables/datos/objetos  para evitar errores entre gráficos
-Dataset_cafe <- DatasetForCoffeeSales2 #solo cambie la ruta del archivo, no toque variables, si requiere añadir un dato, conversión, lo que sea de trabajo como objeto extra, hagalo afuera de todo el bloque de shiny
+Dataset_cafe <- read_csv("~/Estadistica/proyecto progra/DatasetForCoffeeSales2 (1).csv") #solo cambie la ruta del archivo, no toque variables, si requiere añadir un dato, conversión, lo que sea de trabajo como objeto extra, hagalo afuera de todo el bloque de shiny
+#Aquí añadimos algunas funciones que se usan mucho, entonces para no estar explicando cada una
+#h2 coloca título
+#h4 un subtitulo
+#h5 muestra otro subtitulo
+#p lo que se quiere escribir en cierto lugar
+#dive(style==) permite añadir un poco de decoración, pero se uso meramente en colocar fonditos blancos a algunas interpretaciones y tablas para una fácil lectura sin que se pierda en el fondo
+#taglist() esto permite decir que queremos que contenga cada bloque, en este caso, cada pregunta cuando se muestre
+
+
 
 #Modificaciones para la pregunta 1
 jorgito<-Dataset_cafe #Cambio para no tocar el dataset original
 jorgito <- jorgito %>%
-  rename(Final.Sales = `Final Sales`) #solo
+  rename(Final.Sales = `Final Sales`) #solo cambio el nombre pues usaba read.csv y los compañeros usan read_csventonces así evito molestar a los compañeros
 jorgito$Date <- as.Date(jorgito$Date, format = "%m/%d/%Y") #reordeno archivo a formato de fecha
 df = data.frame( jorgito$Date, jorgito$Final.Sales ) #dataframe de jorgito
 promediainador <- df %>% #lo convierto en promediainador para crear un objeto nuevo más simplificado y listo
@@ -51,10 +81,60 @@ datos_pregunta5 <- Dataset_cafe
 
 #No tocar nada de esta parte
 ui <- fluidPage(
+  tags$head( #Esto añade a donde se le indique decoración, se puede hacer prácticamente todo con esto
+    tags$style(HTML(" 
+                    body {
+                      background-image: url('cafe2.jpeg');
+                      background-size: cover;
+                      background-attachment: fixed;
+                      background-position: center;
+                    }
+                     #tabla_resumen table {
+      background-color: white;
+      color: black;
+    }
+
+    #tabla_resumen th {
+      background-color: #D2B48C;
+      color: black;
+    }
+
   
-  titlePanel("Análisis de ventas de café"),
+    #pregunta1 {
+      background-color: #3498db; 
+      color: white;
+      border-radius: 10px;
+    }
+
+    #pregunta2 {
+      background-color: #27ae60;
+      color: white;
+      border-radius: 10px;
+    }
+
+    #pregunta3 {
+      background-color: #9b59b6;
+      color: white;
+      border-radius: 10px;
+    }
+
+    #pregunta4 {
+      background-color: #e67e22;
+      color: white;
+      border-radius: 10px;
+    }
+
+    #pregunta5 {
+      background-color: #e74c3c;
+      color: white;
+      border-radius: 10px;
+    }
+  ")) #El tag$style(HTML()), hace que shiny entienda lo que esta escrito dentro, como algo válido para decorar, y yap
+  ),#Se le dijo por pregunta X, añada color al cuadradito y que el texto por pregunta sea blanco para que no se vea feo y el border-radius le iba diciendo que tanto se redondean las esquinas 0 es cuadrado, 10 alguito y 50 o más(si es que se puede más) ya es como un huevo y solo se usa ";"  porque es como el CSS lee que termina cada orden
   
-  sidebarLayout(
+  titlePanel("Análisis de ventas de café"), #Título del panel
+  
+  sidebarLayout( 
     
     sidebarPanel(
       h3("Preguntas"),
@@ -158,9 +238,9 @@ server <- function(input, output) {
     }
   })
   
-  pantalla <- reactiveVal("ninguna")
-  #Tuvimos que añadir un donde o un algo para que entienda que es cada pantalla, 
-  observeEvent(input$pregunta1, {
+  pantalla <- reactiveVal("naira")#Tuvimos que añadir un donde o un algo para que entienda que es cada cosa, naira es solo para que no este vacío desde el inicio si no se bugea
+  
+  observeEvent(input$pregunta1, { #definimos un p# para cada pregunta y llamarla cuando se va usar, así podemos mostrarlas por separado
     pantalla("p1")
   })
   
@@ -182,7 +262,7 @@ server <- function(input, output) {
   
   observeEvent(input$ver_todos, {
     vista("todos")
-  })
+  }) #lo que hace el observeEvent, es para específicamente "cuando presione X ocurra Y" aquí se uso para solo mostrar las preguntas cuadno se seleccionen sin que choquen
   
   # Filtro reactivo basado en el slider para la Pregunta 5
   datos_filtrados_p5 <- reactive({
@@ -205,9 +285,27 @@ server <- function(input, output) {
       
       tagList(
         h2("Pregunta 1"),
+        
         h4("¿Cómo varían las ventas de café a lo largo del tiempo?"),
-        sliderInput("Rango", "Meses", 1, 24, c(1,3)),
-        plotOutput("distPlot")
+    
+    
+        sliderInput("Rango", "Meses", 1, 24, c(3,19)),
+        plotOutput("distPlot"),
+        div( #Como agregamos un fondo, se tuvo que modificar para que se leyera correctame, tuvimos que añadir un fondo blanco a cada parte
+          style = "
+      background-color: white;
+      padding: 10px;
+      border-radius: 0px;
+      margin-bottom: 20px;
+      
+    " ,
+      h5("Gráfico de líneas"),
+      p("El gráfico de líneas explica de forma visual la manera en la que se mueve a lo largo de los meses
+        el promedio de las ventas del café en general, se opto por utilizar el promedio mensual de ventas
+        en vez del total de ventas mensual, ya que de esta manera se evita un pequeño sesgo donde los meses
+        con mayor cantidad de días tendrían una ligera ventaja al momento de compararlos, pues poseen un mayor
+        perído de tiempo"
+      )  )
       )
       
     } else if (pantalla() == "p2") {
@@ -292,13 +390,26 @@ server <- function(input, output) {
         
         hr(),
         
-        h3("Resumen de ingresos por ciudad"),
-        tableOutput("tabla_ciudades"),
-        
-        hr(),
+        div( #Como agregamos un fondo, se tuvo que modificar para que se leyera correctame, tuvimos que añadir un fondo blanco a cada parte
+          style = "
+      background-color: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    ",
+          tableOutput("tabla_ciudades")
+        ), #Div sirve para el fondo blanco, casi la misma lógica que el CSS
         
         h3("Interpretación"),
-        textOutput("texto_explicativo")
+        
+        div(
+          style = "
+      background-color: white;
+      padding: 15px;
+      border-radius: 10px;
+    ",
+          textOutput("texto_explicativo")
+        ) #Esto hace que se coloque el fondito blanco div es muy útil para modificar el fondo
       )
       
     }
@@ -323,7 +434,13 @@ server <- function(input, output) {
         br(),
         hr(),
         
-        
+        div(
+          style= "
+          background-color: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+          ",
         h5("Grafico de dispersión"),
         p("Este gráfico de dispersión permite evaluar la relación entre la cantidad de unidades vendidas y ",
           "las ventas finales obtenidas. Al activar y desactivar los filtros de la consola, se puede apreciar ",
@@ -334,7 +451,7 @@ server <- function(input, output) {
           tags$li("Muestra analizada a partir del archivo 'DatasetForCoffeeSales2.csv'."),
           tags$li("Variable 'Used_Discount' clasificada de manera binaria (TRUE para transacciones con rebaja, FALSE para precio regular)."),
           tags$li("Las cantidades finales corresponden al cruce directo entre 'Quantity' y 'Final Sales'.")
-        )
+        ))
       )
     }
     else if(pantalla()=="p5"){ #aquí añaden la tag list, guíense de la pregunta 1 y 2
@@ -350,8 +467,15 @@ server <- function(input, output) {
         plotOutput("grafico_p5"),
         br(),
         h3("Resumen de Precio vs Cantidad Vendida"),
-        tableOutput("tabla_resumen_p5")
-      )
+        div( #Como agregamos un fondo, se tuvo que modificar para que se leyera correctame, tuvimos que añadir un fondo blanco a cada parte
+          style = "
+      background-color: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    " ,
+          tableOutput("tabla_resumen_p5")
+      ))
     }
   })
   
@@ -381,7 +505,8 @@ server <- function(input, output) {
         )
       ) +
       labs(
-        title = "Ingresos totales por tipo de café",
+        title = "Gráfico #2 
+  Ingresos totales por tipo de café",
         x = "Tipo de café",
         y = "Ingresos totales"
       ) +
@@ -399,24 +524,25 @@ server <- function(input, output) {
   output$distPlot <- renderPlot({
     
     Canijote <- promediainador[
-      promediainador$Rango >= input$Rango[1] &
-        promediainador$Rango <= input$Rango[2],
+      promediainador$Rango >= input$Rango[1] & #para modificar un x de rango
+        promediainador$Rango <= input$Rango[2], #para modificar un x2 de rango
     ]
     
-    ggplot(Canijote, aes(x = Rango, y = Promedio)) +
+    ggplot(Canijote, aes(x = Rango, y = Promedio)) + #le digo que debe usar y los valores de x y "y"
       geom_line(color = "blue3", linewidth = 2) +
       geom_point() +
       labs(
-        title = "Variación del promedio de venta de café a lo largo del tiempo",
+        title = "Gráfico #1
+        Variación del promedio de venta de café a lo largo del tiempo",
         x = "Meses",
         y = "Promedio"
-      ) +
+      ) + #nombres para los lados del gráfico
       scale_x_continuous(
         breaks = seq(1, 24, by = 1),
         labels = c("Ene/23","Feb/23","Mar/23","Abr/23","May/23","Jun/23",
                    "Jul/23","Ago/23","Sep/23","Oct/23","Nov/23","Dic/23",
                    "Ene/24","Feb/24","Mar/24","Abr/24","May/24","Jun/24",
-                   "Jul/24","Ago/24","Sep/24","Oct/24","Nov/24","Dic/24")
+                   "Jul/24","Ago/24","Sep/24","Oct/24","Nov/24","Dic/24") #nombres para cada punto de x, así es facil identificar en que fecha se encuentra ubicado
       )
   })
   #Finalización pregunta 1
@@ -437,7 +563,8 @@ server <- function(input, output) {
       geom_col(show.legend = FALSE) +
       scale_y_continuous(labels = dollar_format(prefix = "$")) +
       labs(
-        title = "Ingresos acumulados por ciudad",
+        title = "Gráfico #3
+        Ingresos acumulados por ciudad",
         subtitle = "Según el producto de café seleccionado",
         x = "Ciudad",
         y = "Ingresos totales por ventas finales"
@@ -549,7 +676,8 @@ server <- function(input, output) {
       ) +
       labs(
         title = "¿Cómo se comportan las cantidades finales dependiendo de si se usa descuento o no?",
-        subtitle = "Análisis de Dispersión: Unidades vs Ventas Finales",
+        subtitle = "Gráfico #4
+        Análisis de Dispersión: Unidades vs Ventas Finales",
         x = "Cantidad de Unidades (Quantity)",
         y = "Monto de Ventas Finales (Final Sales)",
         color = "Filtro de Descuento"
@@ -572,7 +700,8 @@ server <- function(input, output) {
     ggplot(df_p5, aes(x = factor(`Unit Price`), y = Total_Cantidad, fill = factor(`Unit Price`))) +
       geom_col(color = "black") +
       scale_fill_brewer(palette = "YlOrBr") +
-      labs(title = "Relación Precio Unitario vs Cantidad Total Vendida",
+      labs(title = " Gráfico #5 
+           Relación Precio Unitario vs Cantidad Total Vendida",
            x = "Precio Unitario ($)", 
            y = "Cantidad Total Vendida",
            fill = "Precio ($)") +
@@ -593,3 +722,8 @@ server <- function(input, output) {
 } #Finaliza el código, no escriba nada fuera de este parentesis y siemore llevelo con espacios
 
 shinyApp(ui = ui, server = server)
+
+
+
+
+

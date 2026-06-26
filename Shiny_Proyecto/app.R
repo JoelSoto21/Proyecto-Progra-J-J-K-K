@@ -30,7 +30,7 @@ options(scipen = 999)
 # nunca cambiar el nombre o se jode
 #
 #si debe de añadir o modificar el dataset original, cree una variable que use sus gráficos, si no, pueden haber muchos conlfictos en los gráficos, de ser posible, señale cuales son sus variables/datos/objetos  para evitar errores entre gráficos
-Dataset_cafe <- read_csv("~/Estadistica/proyecto progra/DatasetForCoffeeSales2 (1).csv") #solo cambie la ruta del archivo, no toque variables, si requiere añadir un dato, conversión, lo que sea de trabajo como objeto extra, hagalo afuera de todo el bloque de shiny
+Dataset_cafe <- read_csv("DatasetForCoffeeSales2.csv") #solo cambie la ruta del archivo, no toque variables, si requiere añadir un dato, conversión, lo que sea de trabajo como objeto extra, hagalo afuera de todo el bloque de shiny
 #Aquí añadimos algunas funciones que se usan mucho, entonces para no estar explicando cada una
 #h2 coloca título
 #h4 un subtitulo

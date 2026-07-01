@@ -1,22 +1,4 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    https://shiny.posit.co/
-# nunca cambiar el nombre o se jode
-#
-#
-#
-#
-#
-#
-#
-#
-#
-
-
+#Se Cargan los paquetes, y una funcion clave
 
 library(shiny)     
 library(readr)     
@@ -25,14 +7,14 @@ library(ggplot2)
 library(scales)   
 options(scipen = 999) # Desactiva la notación científica (ej. muestra 100000 en vez de 1e+05)
 
-#    https://shiny.posit.co/
+#https://shiny.posit.co/
 # nunca cambiar el nombre o se jode
-#
-#si debe de añadir o modificar el dataset original, cree una variable que use sus gráficos, si no, pueden haber muchos conlfictos en los gráficos, de ser posible, señale cuales son sus variables/datos/objetos  para evitar errores entre gráficos
+
 
 # Lectura del archivo de datos original
 Dataset_cafe <- read_csv("DatasetForCoffeeSales2.csv") #solo cambie la ruta del archivo, no toque variables, si requiere añadir un dato, conversión, lo que sea de trabajo como objeto extra, hagalo afuera de todo el bloque de shiny
 #Aquí añadimos algunas funciones que se usan mucho, entonces para no estar explicando cada una
+
 #h2 coloca título
 #h4 un subtitulo
 #h5 muestra otro subtitulo
@@ -45,7 +27,7 @@ Dataset_cafe <- read_csv("DatasetForCoffeeSales2.csv") #solo cambie la ruta del 
 # Modificaciones para la pregunta 1
 jorgito<-Dataset_cafe #Cambio para no tocar el dataset original
 jorgito <- jorgito %>%
-  rename(Final.Sales = `Final Sales`) #solo cambio el nombre pues usaba read.csv y los compañeros usan read_csventonces así evito molestar a los compañeros
+  rename(Final.Sales = `Final Sales`) #solo cambio el nombre pues usaba read.csv y los compañeros usan read_csv entonces así evito molestar a los compañeros
 jorgito$Date <- as.Date(jorgito$Date, format = "%m/%d/%Y") #reordeno archivo a formato de fecha
 df = data.frame( jorgito$Date, jorgito$Final.Sales ) #dataframe de jorgito
 
@@ -524,7 +506,7 @@ server <- function(input, output) {
       coord_flip() + # Rota los ejes para transformar el gráfico en barras horizontales
       scale_fill_manual( # Asigna colores fijos específicos a cada categoría de producto de café
         values = c(
-          "Brazilian" = "forestgreen",
+          "Brazilian" = "forestgreen", #Colores asociados al cafe, segun colores de su bandera
           "Colombian" = "gold",
           "Costa Rica" = "blue",
           "Ethiopian" = "purple",
